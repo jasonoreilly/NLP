@@ -27,7 +27,7 @@ from collections import defaultdict
 
 def word2onehot(word, vocab_length, word_index):
     # Initialise a blank vector
-    word_vec = np.zeros(vocab_length)
+    word_vec = [0 for i in range(0, nr_unique_words)]
 
     # Get ID of word from word_index
     word_id = word_index[word]
@@ -39,13 +39,15 @@ def word2onehot(word, vocab_length, word_index):
 
 
 def forward_pass(target_vector, weight_matrix1, weight_matrix2):
-    # x is one-hot encoded vector, shape (nr_unique_words)*1 (9x1)
-    # Run through first matrix (w1) to get hidden layer - 10x9 dot 9x1 returns 10x1
+    # x is one-hot encoded vector, shape 1*(nr_unique_words) (1x9)
+    # Run through first matrix (w1) to get hidden layer - 1x9 dot 9x10 returns 1x10
     h = np.dot(target_vector, weight_matrix1)
-    # Dot product hidden layer with second matrix (w2) - 9x10 dot 10x1 gives us 9x1 - one for each unique_word
+    # Dot product hidden layer with second matrix (w2) - 1x10 dot 10x9 gives us 1x9 - one for each unique_word
     u = np.dot(h, weight_matrix2)
-    # Run 1x9 through softmax to force each element to range of [0, 1] (probabilites) - 1x8
+    # Run 1x9 through softmax to force each element to range of [0, 1] (probabilites) - 1x9
     y_c = softmax(u)
+
+    print(h.shape, u.shape, y_c.shape)
 
     return y_c, h, u
 
@@ -152,6 +154,7 @@ for sentence in corpus:
                 #print(sentence[i], sentence[j])
 
         training_data.append([w_target, w_context])
+    training_data = np.array(training_data)
 
 
 # Train Model
@@ -191,6 +194,11 @@ for i in range(epochs):
         # print("W2-after backprop", w2)	    #
         #########################################
 
+        # Calculate Loss
+        loss += -np.sum([u[word.index(1)] for word in w_c]) + len(w_c) * np.log(np.sum(np.exp(u)))
+
+    print('Epoch: ', i, "Loss: ", loss)
+
 
 # Get vector for word
 word = "machine"
@@ -199,6 +207,8 @@ print(word, vec)
 
 # Find similar words
 vec_sim(word="machine", top_n=3, weight_matrix1=w1, index_word=index_word, word_index=word_index)
+
+
 
 
 
